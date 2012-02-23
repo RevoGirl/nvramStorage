@@ -1,0 +1,156 @@
+#!/bin/sh
+#
+# Script (nvramSetup) to setup a simple NVRAM storage under /Extra/NVRAM
+#
+# Version 0.1 - Copyright (c) 2012 by RevoGirl <DutchHockeyGoalie@yahoo.com>
+#
+
+#set -x # Used for tracing errors (can be put anywhere in the script).
+
+#================================= GLOBAL VARS ==================================
+
+launchDaemonPlist=/Library/launchDaemons/com.nvram.storage.plist
+
+#=============================== LOCAL FUNCTIONS ================================
+
+function _fileExists()
+{
+  if [ -e $1 ];
+      then
+          echo 1 # "File exists"
+      else
+          echo 0 # "File does not exist"
+  fi
+}
+
+#--------------------------------------------------------------------------------
+
+function _createLaunchDaemonPlist()
+{
+  echo '<?xml version="1.0" encoding="UTF-8"?>'				>  $launchDaemonPlist
+  echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> $launchDaemonPlist
+  echo '<plist version="1.0">'						>> $launchDaemonPlist
+  echo '<dict>'								>> $launchDaemonPlist
+  echo '        <key>Label</key>'					>> $launchDaemonPlist
+  echo '        <string>com.nvram.storage</string>'			>> $launchDaemonPlist
+  echo '        <key>OnDemand</key>'					>> $launchDaemonPlist
+  echo '        <false/>'						>> $launchDaemonPlist
+  echo '        <key>ProgramArguments</key>'				>> $launchDaemonPlist
+  echo '        <array>'						>> $launchDaemonPlist
+  echo '                <string>/Extra/NVRAM/nvramDaemon</string>'	>> $launchDaemonPlist
+  echo '        </array>'						>> $launchDaemonPlist
+  echo '        <key>ServiceIPC</key>'					>> $launchDaemonPlist
+  echo '        <false/>'						>> $launchDaemonPlist
+  echo '        <key>StandardErrorPath</key>'				>> $launchDaemonPlist
+  echo '        <string>/var/log/nvramStorage.log</string>'		>> $launchDaemonPlist
+  echo '        <key>StandardOutPath</key>'				>> $launchDaemonPlist
+  echo '        <string>/var/log/nvramStorage.log</string>'		>> $launchDaemonPlist
+  echo '        <key>KeepAlive</key>'					>> $launchDaemonPlist
+  echo '        <true/>'						>> $launchDaemonPlist
+  echo '        <key>RunAtLoad</key>'					>> $launchDaemonPlist
+  echo '        <true/>'						>> $launchDaemonPlist
+  echo '        <key>ThrottleInterval</key>'				>> $launchDaemonPlist
+  echo '        <integer>30</integer>'					>> $launchDaemonPlist
+  echo '</dict>'							>> $launchDaemonPlist
+  echo '</plist>'							>> $launchDaemonPlist
+}
+
+#--------------------------------------------------------------------------------
+
+function main()
+{
+  #
+  # Do we have our target directory.
+  #
+  if [ $(_fileExists /Extra/NVRAM) -eq 0 ];
+      then
+      #
+      # No we don't. Create it.
+      #  
+      sudo mkdir /Extra/NVRAM
+  fi
+
+  #
+  # Fix ownership and permissions.
+  #
+  sudo chown root:wheel /Extra/NVRAM
+  sudo chmod 755 /Extra/NVRAM
+
+  #
+  # Copy the daemon. 
+  #
+  sudo cp nvramDaemon /Extra/NVRAM/
+
+  #
+  # Fix file ownership and permissions.
+  #
+  sudo chown root:wheel /Extra/NVRAM/nvramDaemon
+  sudo chmod 744 /Extra/NVRAM/nvramDaemon
+
+  #
+  # Dump the NVRAM contents to a file.
+  #
+  sudo nvram -xp > /Extra/NVRAM/nvramStorage.plist
+
+  #
+  # Fix ownership and permissions of plist.
+  #
+  sudo chown root:wheel /Extra/NVRAM/nvramStorage.plist
+  sudo chmod 644 /Extra/NVRAM/nvramStorage.plist
+
+  _createLaunchDaemonPlist
+
+  #
+  # Fix ownership and permissions of our Launch Daemon.
+  #
+  sudo chown root:wheel /Library/LaunchDaemons/com.nvram.storage.plist
+  sudo chmod 644 /Library/LaunchDaemons/com.nvram.storage.plist
+
+  local status=`/usr/bin/sudo /bin/launchctl list | grep -e com.nvram.storage`
+
+  #
+  # Is this the first time that nvramSetup was fired up?
+  #
+  if [[ $status =~ com.nvram.storage$ ]]; then
+      #
+      # No. Stop the Launch Daemon.
+      #
+      sudo launchctl stop com.nvram.storage
+
+      #
+      # Now unload the Launch Daemon.
+      #
+      sudo launchctl unload /Library/LaunchDaemons/com.nvram.storage.plist
+  fi
+
+  #
+  # Load the NVRAM Launch Daemon.
+  #
+  sudo launchctl load /Library/LaunchDaemons/com.nvram.storage.plist
+}
+
+#--------------------------------------------------------------------------------
+#
+# Only administrators (root) are allowed to run this script.
+#
+#--------------------------------------------------------------------------------
+
+function _isRoot()
+{
+  if [ $(id -u) != 0 ]; then
+      echo "This script must be run as root" 1>&2
+      exit 1
+  fi
+
+  echo 1
+}
+
+#==================================== START =====================================
+
+if [ $(_isRoot) ]; then
+  main
+fi
+
+#================================================================================
+
+exit 0
