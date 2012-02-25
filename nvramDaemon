@@ -3,7 +3,7 @@
 #
 # Script (daemon) to keep track of changes to NVRAM storage.
 #
-# Version 0.1 - Copyright (c) 2012 by RevoGirl <DutchHockeyGoalie@yahoo.com>
+# Version 0.2 - Copyright (c) 2012 by RevoGirl <DutchHockeyGoalie@yahoo.com>
 #
 
 #set -x # Used for tracing errors (can be put anywhere in the script).
@@ -39,24 +39,24 @@ function _initialRun()
 
 function _shouldUpdate()
 {
-   sudo nvram -x -p > $tmpStoragePlist
+  sudo nvram -xp > $tmpStoragePlist
 
-   local storageChecksum=`/sbin/md5 -q $storagePlist`
-   local tmpStorageChecksum=`/sbin/md5 -q $tmpStoragePlist`
+  local storageChecksum=`/sbin/md5 -q $storagePlist`
+  local tmpStorageChecksum=`/sbin/md5 -q $tmpStoragePlist`
 
-   if [ $storageChecksum == $tmpStorageChecksum ];
-       then
-           echo 0
-       else
-           echo 1
-   fi
+  if [ $storageChecksum == $tmpStorageChecksum ];
+      then
+          echo 0
+      else
+          echo 1
+  fi
 }
 
 #--------------------------------------------------------------------------------
 
 function _restoreNVRAMFromFile()
 {
-  sudo nvram -x -f $storagePlist
+  sudo nvram -xf $storagePlist
   sudo cp $storagePlist $tmpStoragePlist
 }
 
