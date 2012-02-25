@@ -130,7 +130,7 @@ function main()
   if [ ${#targetVolume} -eq 0 ];
       then
           #
-          # Yes (we need at least '/Volumes/xx') to come here.
+          # No (we need at least '/Volumes/xx') to come here.
           #
           local status=`/usr/bin/sudo /bin/launchctl list | grep -e com.nvram.storage`
 
@@ -155,9 +155,9 @@ function main()
           sudo launchctl load "${targetVolume}/Library/LaunchDaemons/com.nvram.storage"
       else
           #
-          # Let's keep a copy of the installation script on the target volume.
+          # Yes. Keep a copy of the installation script on the target volume.
           #
-          sudo cp nvramSetup "${targetInstallPath}"
+          sudo cp nvramSetup "${targetInstallPath}/"
   fi
 }
 
