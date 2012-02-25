@@ -2,20 +2,38 @@
 #
 # Script (nvramSetup) to setup a simple NVRAM storage under /Extra/NVRAM
 #
-# Version 0.1 - Copyright (c) 2012 by RevoGirl <DutchHockeyGoalie@yahoo.com>
+# Version 0.2 - Copyright (c) 2012 by RevoGirl <DutchHockeyGoalie@yahoo.com>
 #
 
 #set -x # Used for tracing errors (can be put anywhere in the script).
 
 #================================= GLOBAL VARS ==================================
 
-launchDaemonPlist=/Library/launchDaemons/com.nvram.storage.plist
+#
+# Optional target volume for the installation process. Example: "/Volumes/Mountain Lion"
+#
+targetVolume=""
+
+#
+# Target path.
+#
+targetPath="/Extra/NVRAM"
+
+#
+# Target path used for the installation process. 
+#
+targetInstallPath="${targetVolume}${targetPath}"
+
+#
+# Path to our configuation plist.
+#
+launchDaemonPlist="${targetVolume}/Library/LaunchDaemons/com.nvram.storage.plist"
 
 #=============================== LOCAL FUNCTIONS ================================
 
 function _fileExists()
 {
-  if [ -e $1 ];
+  if [ -e "$1" ];
       then
           echo 1 # "File exists"
       else
@@ -37,7 +55,7 @@ function _createLaunchDaemonPlist()
   echo '        <false/>'						>> $launchDaemonPlist
   echo '        <key>ProgramArguments</key>'				>> $launchDaemonPlist
   echo '        <array>'						>> $launchDaemonPlist
-  echo '                <string>/Extra/NVRAM/nvramDaemon</string>'	>> $launchDaemonPlist
+  echo '                <string>'$targetPath'/nvramDaemon</string>'	>> $launchDaemonPlist
   echo '        </array>'						>> $launchDaemonPlist
   echo '        <key>ServiceIPC</key>'					>> $launchDaemonPlist
   echo '        <false/>'						>> $launchDaemonPlist
@@ -62,71 +80,85 @@ function main()
   #
   # Do we have our target directory.
   #
-  if [ $(_fileExists /Extra/NVRAM) -eq 0 ];
+  if [ $(_fileExists "${targetInstallPath}") -eq 0 ];
       then
       #
       # No we don't. Create it.
       #  
-      sudo mkdir /Extra/NVRAM
+      sudo mkdir -p "${targetInstallPath}"
   fi
 
   #
   # Fix ownership and permissions.
   #
-  sudo chown root:wheel /Extra/NVRAM
-  sudo chmod 755 /Extra/NVRAM
+  sudo chown root:wheel "${targetInstallPath}"
+  sudo chmod 755 "${targetInstallPath}"
 
   #
   # Copy the daemon. 
   #
-  sudo cp nvramDaemon /Extra/NVRAM/
+  sudo cp nvramDaemon "${targetInstallPath}/"
 
   #
   # Fix file ownership and permissions.
   #
-  sudo chown root:wheel /Extra/NVRAM/nvramDaemon
-  sudo chmod 744 /Extra/NVRAM/nvramDaemon
+  sudo chown root:wheel "${targetInstallPath}/nvramDaemon"
+  sudo chmod 744 "${targetInstallPath}/nvramDaemon"
 
   #
   # Dump the NVRAM contents to a file.
   #
-  sudo nvram -xp > /Extra/NVRAM/nvramStorage.plist
+  sudo nvram -xp > "${targetInstallPath}/nvramStorage.plist"
 
   #
   # Fix ownership and permissions of plist.
   #
-  sudo chown root:wheel /Extra/NVRAM/nvramStorage.plist
-  sudo chmod 644 /Extra/NVRAM/nvramStorage.plist
+  sudo chown root:wheel "${targetInstallPath}/nvramStorage.plist"
+  sudo chmod 644 "${targetInstallPath}/nvramStorage.plist"
 
   _createLaunchDaemonPlist
 
   #
   # Fix ownership and permissions of our Launch Daemon.
   #
-  sudo chown root:wheel /Library/LaunchDaemons/com.nvram.storage.plist
-  sudo chmod 644 /Library/LaunchDaemons/com.nvram.storage.plist
-
-  local status=`/usr/bin/sudo /bin/launchctl list | grep -e com.nvram.storage`
+  sudo chown root:wheel "${launchDaemonPlist}"
+  sudo chmod 644 "${launchDaemonPlist}"
 
   #
-  # Is this the first time that nvramSetup was fired up?
+  # Are we installing onto another volume? 
   #
-  if [[ $status =~ com.nvram.storage$ ]]; then
-      #
-      # No. Stop the Launch Daemon.
-      #
-      sudo launchctl stop com.nvram.storage
+  if [ ${#targetVolume} -eq 0 ];
+      then
+          #
+          # Yes (we need at least '/Volumes/xx') to come here.
+          #
+          local status=`/usr/bin/sudo /bin/launchctl list | grep -e com.nvram.storage`
 
-      #
-      # Now unload the Launch Daemon.
-      #
-      sudo launchctl unload /Library/LaunchDaemons/com.nvram.storage.plist
+          #
+          # Is this the first time that nvramSetup was fired up?
+          #
+          if [[ $status =~ com.nvram.storage$ ]]; then
+              #
+              # No. Stop the Launch Daemon.
+              #
+              sudo launchctl stop com.nvram.storage
+
+              #
+              # Now unload the Launch Daemon.
+              #
+              sudo launchctl unload "${targetVolume}/Library/LaunchDaemons/com.nvram.storage"
+          fi
+
+          #
+          # Load the NVRAM Launch Daemon.
+          #
+          sudo launchctl load "${targetVolume}/Library/LaunchDaemons/com.nvram.storage"
+      else
+          #
+          # Let's keep a copy of the installation script on the target volume.
+          #
+          sudo cp nvramSetup "${targetInstallPath}"
   fi
-
-  #
-  # Load the NVRAM Launch Daemon.
-  #
-  sudo launchctl load /Library/LaunchDaemons/com.nvram.storage.plist
 }
 
 #--------------------------------------------------------------------------------
