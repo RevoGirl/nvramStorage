@@ -8,10 +8,10 @@
         <false/>
         <key>ProgramArguments</key>
         <array>
-		<string>/usr/bin/sandbox-exec</string>
-		<string>-f</string>
-		<string>/Extra/NVRAM/Sandbox/com.nvram.storage.sb</string>
-        	<string>/Extra/NVRAM/nvramDaemon</string>
+                <string>/usr/bin/sandbox-exec</string>
+                <string>-f</string>
+                <string>/Extra/NVRAM/Sandbox/com.nvram.storage.sb</string>
+                <string>/Extra/NVRAM/nvramDaemon</string>
         </array>
         <key>ServiceIPC</key>
         <false/>
