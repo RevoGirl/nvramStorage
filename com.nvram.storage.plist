@@ -2,25 +2,28 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>Label</key>
-	<string>com.nvram.storage</string>
-	<key>OnDemand</key>
-	<false/>
-	<key>ProgramArguments</key>
-	<array>
-		<string>/Extra/NVRAM/nvramDaemon</string>
-	</array>
-	<key>ServiceIPC</key>
-	<false/>
-	<key>StandardErrorPath</key>
-	<string>/var/log/nvramStorage.log</string>
-	<key>StandardOutPath</key>
-	<string>/var/log/nvramStorage.log</string>
-	<key>KeepAlive</key>
-	<true/>
-	<key>RunAtLoad</key>
-	<true/>
-	<key>ThrottleInterval</key>
-	<integer>30</integer>
+        <key>Label</key>
+        <string>com.nvram.storage</string>
+        <key>OnDemand</key>
+        <false/>
+        <key>ProgramArguments</key>
+        <array>
+		<string>/usr/bin/sandbox-exec</string>
+		<string>-f</string>
+		<string>/Extra/NVRAM/Sandbox/com.nvram.storage.sb</string>
+        	<string>/Extra/NVRAM/nvramDaemon</string>
+        </array>
+        <key>ServiceIPC</key>
+        <false/>
+        <key>StandardErrorPath</key>
+        <string>/var/log/nvramStorage.log</string>
+        <key>StandardOutPath</key>
+        <string>/var/log/nvramStorage.log</string>
+        <key>KeepAlive</key>
+        <true/>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>ThrottleInterval</key>
+        <integer>30</integer>
 </dict>
 </plist>

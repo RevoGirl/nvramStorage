@@ -1,0 +1,47 @@
+; Copyright (c) 2012 by RevoGirl. All rights reserved.
+;
+; Sandbox profile (version 0.1) for: /Extra/NVRAM/nvramDaemon
+;
+
+(version 1)
+
+(import "bsd.sb")
+
+(deny default)
+
+(allow process-fork)
+
+(allow file-read-data file-read-metadata
+       (literal "/")
+       (literal "/dev/tty")
+       (literal "/usr/sbin")
+       (literal "/usr/sbin/nvram")
+       (literal "/private/tmp/nvramStorage.plist")
+       (literal "/Extra/NVRAM/nvramDaemon")
+       (literal "/Extra/NVRAM/nvramStorage.plist"))
+
+(allow file-write-create
+       (literal "/private/tmp/nvramStorage.plist"))
+
+(allow file-read-xattr 
+       (literal "/private/tmp/nvramStorage.plist")
+       (literal "/Extra/NVRAM/nvramStorage.plist"))
+
+(allow file-write-mode
+       (literal "/private/tmp/nvramStorage.plist")
+       (literal "/Extra/NVRAM/nvramStorage.plist"))
+
+(allow file-write-data
+       (literal "/dev/tty")
+       (literal "/private/tmp/nvramStorage.plist")
+       (literal "/Extra/NVRAM/nvramStorage.plist"))
+
+(allow process-exec 
+       (literal "/bin/sh")
+       (literal "/bin/cp")
+       (literal "/bin/date")
+       (literal "/sbin/md5")
+       (literal "/usr/sbin/nvram")
+       (literal "/Extra/NVRAM/nvramDaemon"))
+
+(allow iokit-set-properties)

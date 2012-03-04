@@ -3,7 +3,7 @@
 #
 # Script (daemon) to keep track of changes to NVRAM storage.
 #
-# Version 0.3 - Copyright (c) 2012 by RevoGirl <DutchHockeyGoalie@yahoo.com>
+# Version 0.4 - Copyright (c) 2012 by RevoGirl <DutchHockeyGoalie@yahoo.com>
 #
 
 #set -x # Used for tracing errors (can be put anywhere in the script).
@@ -39,7 +39,7 @@ function _initialRun()
 
 function _shouldUpdate()
 {
-  nvram -xp > $tmpStoragePlist
+  /usr/sbin/nvram -xp > $tmpStoragePlist
 
   local storageChecksum=`/sbin/md5 -q $storagePlist`
   local tmpStorageChecksum=`/sbin/md5 -q $tmpStoragePlist`
@@ -56,15 +56,15 @@ function _shouldUpdate()
 
 function _restoreNVRAMFromFile()
 {
-  nvram -xf $storagePlist
-  cp $storagePlist $tmpStoragePlist
+  /usr/sbin/nvram -xf $storagePlist
+  /bin/cp $storagePlist $tmpStoragePlist
 }
 
 #--------------------------------------------------------------------------------
 
 function _updateNVRAM()
 {
-  cp $tmpStoragePlist $storagePlist         
+  /bin/cp $tmpStoragePlist $storagePlist         
   _restoreNVRAMFromFile
 }
 
@@ -72,14 +72,14 @@ function _updateNVRAM()
 
 if [ $(_initialRun) -eq 1 ];
     then
-        echo "Restored" `date "+%d-%m-%Y @ %H:%M:%S"`
+        echo "Restored" `/bin/date "+%d-%m-%Y @ %H:%M:%S"`
 
         _restoreNVRAMFromFile
     else
-        echo "Checked" `date "+ @ %H:%M:%S"`
+        echo "Checked" `/bin/date "+ @ %H:%M:%S"`
 
         if [ $(_shouldUpdate) -eq 1 ]; then
-            echo "Update" `date "+ @ %H:%M:%S"`
+            echo "Update" `/bin/date "+ @ %H:%M:%S"`
 
             _updateNVRAM
         fi
