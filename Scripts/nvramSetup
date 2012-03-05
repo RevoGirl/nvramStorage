@@ -57,93 +57,93 @@ function _fileExists()
 
 function _createLaunchDaemonPlist()
 {
-  echo '<?xml version="1.0" encoding="UTF-8"?>'						>  $launchDaemonPlist
+  echo '<?xml version="1.0" encoding="UTF-8"?>'                                         >  $launchDaemonPlist
   echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> $launchDaemonPlist
-  echo '<plist version="1.0">'								>> $launchDaemonPlist
-  echo '<dict>'										>> $launchDaemonPlist
-  echo '        <key>Label</key>'							>> $launchDaemonPlist
-  echo '        <string>com.nvram.storage</string>'					>> $launchDaemonPlist
-  echo '        <key>OnDemand</key>'							>> $launchDaemonPlist
-  echo '        <false/>'								>> $launchDaemonPlist
-  echo '        <key>ProgramArguments</key>'						>> $launchDaemonPlist
-  echo '        <array>'								>> $launchDaemonPlist
-  echo '                <string>/usr/bin/sandbox-exec</string>'				>> $launchDaemonPlist
-  echo '                <string>-f</string>'						>> $launchDaemonPlist
-  echo '                <string>'$targetPath'/Sandbox/com.nvram.storage.sb</string>'	>> $launchDaemonPlist
-  echo '                <string>'$targetPath'/Daemon/nvramDaemon</string>'		>> $launchDaemonPlist
-  echo '        </array>'								>> $launchDaemonPlist
-  echo '        <key>ServiceIPC</key>'							>> $launchDaemonPlist
-  echo '        <false/>'								>> $launchDaemonPlist
-  echo '        <key>StandardErrorPath</key>'						>> $launchDaemonPlist
-  echo '        <string>/var/log/nvramStorage.log</string>'				>> $launchDaemonPlist
-  echo '        <key>StandardOutPath</key>'						>> $launchDaemonPlist
-  echo '        <string>/var/log/nvramStorage.log</string>'				>> $launchDaemonPlist
-  echo '        <key>KeepAlive</key>'							>> $launchDaemonPlist
-  echo '        <true/>'								>> $launchDaemonPlist
-  echo '        <key>RunAtLoad</key>'							>> $launchDaemonPlist
-  echo '        <true/>'								>> $launchDaemonPlist
-  echo '        <key>ThrottleInterval</key>'						>> $launchDaemonPlist
-  echo '        <integer>'$throttleInterval'</integer>'					>> $launchDaemonPlist
-  echo '</dict>'									>> $launchDaemonPlist
-  echo '</plist>'									>> $launchDaemonPlist
+  echo '<plist version="1.0">'                                                          >> $launchDaemonPlist
+  echo '<dict>'                                                                         >> $launchDaemonPlist
+  echo '        <key>Label</key>'                                                       >> $launchDaemonPlist
+  echo '        <string>com.nvram.storage</string>'                                     >> $launchDaemonPlist
+  echo '        <key>OnDemand</key>'                                                    >> $launchDaemonPlist
+  echo '        <false/>'                                                               >> $launchDaemonPlist
+  echo '        <key>ProgramArguments</key>'                                            >> $launchDaemonPlist
+  echo '        <array>'                                                                >> $launchDaemonPlist
+  echo '                <string>/usr/bin/sandbox-exec</string>'                         >> $launchDaemonPlist
+  echo '                <string>-f</string>'                                            >> $launchDaemonPlist
+  echo '                <string>'$targetPath'/Sandbox/com.nvram.storage.sb</string>'    >> $launchDaemonPlist
+  echo '                <string>'$targetPath'/Daemon/nvramDaemon</string>'              >> $launchDaemonPlist
+  echo '        </array>'                                                               >> $launchDaemonPlist
+  echo '        <key>ServiceIPC</key>'                                                  >> $launchDaemonPlist
+  echo '        <false/>'                                                               >> $launchDaemonPlist
+  echo '        <key>StandardErrorPath</key>'                                           >> $launchDaemonPlist
+  echo '        <string>/var/log/nvramStorage.log</string>'                             >> $launchDaemonPlist
+  echo '        <key>StandardOutPath</key>'                                             >> $launchDaemonPlist
+  echo '        <string>/var/log/nvramStorage.log</string>'                             >> $launchDaemonPlist
+  echo '        <key>KeepAlive</key>'                                                   >> $launchDaemonPlist
+  echo '        <true/>'                                                                >> $launchDaemonPlist
+  echo '        <key>RunAtLoad</key>'                                                   >> $launchDaemonPlist
+  echo '        <true/>'                                                                >> $launchDaemonPlist
+  echo '        <key>ThrottleInterval</key>'                                            >> $launchDaemonPlist
+  echo '        <integer>'$throttleInterval'</integer>'                                 >> $launchDaemonPlist
+  echo '</dict>'                                                                        >> $launchDaemonPlist
+  echo '</plist>'                                                                       >> $launchDaemonPlist
 }
 
 #--------------------------------------------------------------------------------
 
 function _createSandboxProfile()
 {
-  echo '; Copyright (c) 2012 by RevoGirl. All rights reserved.'		>  $sandboxProfile
-  echo ';'								>> $sandboxProfile
-  echo '; Sandbox profile (version 0.2) for: '$targetPath'/nvramDaemon'	>> $sandboxProfile
-  echo ';'								>> $sandboxProfile
-  echo ''								>> $sandboxProfile
-  echo '(version 1)'							>> $sandboxProfile
-  echo ''								>> $sandboxProfile
-  echo '(import "bsd.sb")'						>> $sandboxProfile
-  echo ''								>> $sandboxProfile
-  echo '(deny default)'							>> $sandboxProfile
-  echo ''								>> $sandboxProfile
-  echo '(allow process-fork)'						>> $sandboxProfile
-  echo ''								>> $sandboxProfile
-  echo '(allow file-read-data file-read-metadata'			>> $sandboxProfile
-  echo '       (literal "/")'						>> $sandboxProfile
-  echo '       (literal "/dev/tty")'					>> $sandboxProfile
-  echo '       (literal "/usr/sbin")'					>> $sandboxProfile
-  echo '       (literal "/usr/sbin/nvram")'				>> $sandboxProfile
-  echo '       (literal "/private/tmp/nvramStorage.plist")'		>> $sandboxProfile
-  echo '       (literal "'$targetPath'/Daemon/nvramDaemon")'		>> $sandboxProfile
-  echo '       (literal "'$targetPath'/nvramStorage.plist"))'		>> $sandboxProfile
-  echo ''								>> $sandboxProfile
-  echo '(allow file-write-create'					>> $sandboxProfile
-  echo '       (literal "/private/tmp/nvramStorage.plist"))'		>> $sandboxProfile
-  echo ''								>> $sandboxProfile
-  echo '(allow file-read-xattr'						>> $sandboxProfile
-  echo '       (literal "/private/tmp/nvramStorage.plist")'		>> $sandboxProfile
-  echo '       (literal "'$targetPath'/nvramStorage.plist"))'		>> $sandboxProfile
-  echo ''								>> $sandboxProfile
-  echo '(allow file-write-mode'						>> $sandboxProfile
-  echo '       (literal "/private/tmp/nvramStorage.plist")'		>> $sandboxProfile
-  echo '       (literal "'$targetPath'/nvramStorage.plist"))'		>> $sandboxProfile
-  echo ''								>> $sandboxProfile
-  echo '(allow file-write-data'						>> $sandboxProfile
-  echo '       (literal "/dev/tty")'					>> $sandboxProfile
-  echo '       (literal "/private/tmp/nvramStorage.plist")'		>> $sandboxProfile
-  echo '       (literal "'$targetPath'/nvramStorage.plist"))'		>> $sandboxProfile
-  echo ''								>> $sandboxProfile
-  echo '; Required for Mountain Lion.'					>> $sandboxProfile
-  echo '(allow file-ioctl'						>> $sandboxProfile
-  echo '       (literal "/private/tmp/nvramStorage.plist")'		>> $sandboxProfile
-  echo '       (literal "'$targetPath'/nvramStorage.plist"))'		>> $sandboxProfile
-  echo ''								>> $sandboxProfile
-  echo '(allow process-exec'						>> $sandboxProfile
-  echo '       (literal "/bin/sh")'					>> $sandboxProfile
-  echo '       (literal "/bin/cp")'					>> $sandboxProfile
-  echo '       (literal "/bin/date")'					>> $sandboxProfile
-  echo '       (literal "/sbin/md5")'					>> $sandboxProfile
-  echo '       (literal "/usr/sbin/nvram")'				>> $sandboxProfile
-  echo '       (literal "'$targetPath'/Daemon/nvramDaemon"))'		>> $sandboxProfile
-  echo ''								>> $sandboxProfile
-  echo '(allow iokit-set-properties)'					>> $sandboxProfile
+  echo '; Copyright (c) 2012 by RevoGirl. All rights reserved.'         >  $sandboxProfile
+  echo ';'                                                              >> $sandboxProfile
+  echo '; Sandbox profile (version 0.2) for: '$targetPath'/nvramDaemon' >> $sandboxProfile
+  echo ';'                                                              >> $sandboxProfile
+  echo ''                                                               >> $sandboxProfile
+  echo '(version 1)'                                                    >> $sandboxProfile
+  echo ''                                                               >> $sandboxProfile
+  echo '(import "bsd.sb")'                                              >> $sandboxProfile
+  echo ''                                                               >> $sandboxProfile
+  echo '(deny default)'                                                 >> $sandboxProfile
+  echo ''                                                               >> $sandboxProfile
+  echo '(allow process-fork)'                                           >> $sandboxProfile
+  echo ''                                                               >> $sandboxProfile
+  echo '(allow file-read-data file-read-metadata'                       >> $sandboxProfile
+  echo '       (literal "/")'                                           >> $sandboxProfile
+  echo '       (literal "/dev/tty")'                                    >> $sandboxProfile
+  echo '       (literal "/usr/sbin")'                                   >> $sandboxProfile
+  echo '       (literal "/usr/sbin/nvram")'                             >> $sandboxProfile
+  echo '       (literal "/private/tmp/nvramStorage.plist")'             >> $sandboxProfile
+  echo '       (literal "'$targetPath'/Daemon/nvramDaemon")'            >> $sandboxProfile
+  echo '       (literal "'$targetPath'/nvramStorage.plist"))'           >> $sandboxProfile
+  echo ''                                                               >> $sandboxProfile
+  echo '(allow file-write-create'                                       >> $sandboxProfile
+  echo '       (literal "/private/tmp/nvramStorage.plist"))'            >> $sandboxProfile
+  echo ''                                                               >> $sandboxProfile
+  echo '(allow file-read-xattr'                                         >> $sandboxProfile
+  echo '       (literal "/private/tmp/nvramStorage.plist")'             >> $sandboxProfile
+  echo '       (literal "'$targetPath'/nvramStorage.plist"))'           >> $sandboxProfile
+  echo ''                                                               >> $sandboxProfile
+  echo '(allow file-write-mode'                                         >> $sandboxProfile
+  echo '       (literal "/private/tmp/nvramStorage.plist")'             >> $sandboxProfile
+  echo '       (literal "'$targetPath'/nvramStorage.plist"))'           >> $sandboxProfile
+  echo ''                                                               >> $sandboxProfile
+  echo '(allow file-write-data'                                         >> $sandboxProfile
+  echo '       (literal "/dev/tty")'                                    >> $sandboxProfile
+  echo '       (literal "/private/tmp/nvramStorage.plist")'             >> $sandboxProfile
+  echo '       (literal "'$targetPath'/nvramStorage.plist"))'           >> $sandboxProfile
+  echo ''                                                               >> $sandboxProfile
+  echo '; Required for Mountain Lion.'                                  >> $sandboxProfile
+  echo '(allow file-ioctl'                                              >> $sandboxProfile
+  echo '       (literal "/private/tmp/nvramStorage.plist")'             >> $sandboxProfile
+  echo '       (literal "'$targetPath'/nvramStorage.plist"))'           >> $sandboxProfile
+  echo ''                                                               >> $sandboxProfile
+  echo '(allow process-exec'                                            >> $sandboxProfile
+  echo '       (literal "/bin/sh")'                                     >> $sandboxProfile
+  echo '       (literal "/bin/cp")'                                     >> $sandboxProfile
+  echo '       (literal "/bin/date")'                                   >> $sandboxProfile
+  echo '       (literal "/sbin/md5")'                                   >> $sandboxProfile
+  echo '       (literal "/usr/sbin/nvram")'                             >> $sandboxProfile
+  echo '       (literal "'$targetPath'/Daemon/nvramDaemon"))'           >> $sandboxProfile
+  echo ''                                                               >> $sandboxProfile
+  echo '(allow iokit-set-properties)'                                   >> $sandboxProfile
 }
 
 #--------------------------------------------------------------------------------
