@@ -11,7 +11,7 @@
                 <string>/usr/bin/sandbox-exec</string>
                 <string>-f</string>
                 <string>/Extra/NVRAM/Sandbox/com.nvram.storage.sb</string>
-                <string>/Extra/NVRAM/nvramDaemon</string>
+                <string>/Extra/NVRAM/Daemon/nvramDaemon</string>
         </array>
         <key>ServiceIPC</key>
         <false/>
