@@ -1,0 +1,321 @@
+#!/bin/sh
+#
+# Script (nvramSetup) to setup a simple NVRAM storage under /Extra/NVRAM
+#
+# Version 0.5 - Copyright (c) 2012 by RevoGirl <DutchHockeyGoalie@yahoo.com>
+#
+
+#set -x # Used for tracing errors (can be put anywhere in the script).
+
+#================================= GLOBAL VARS ==================================
+
+#
+# Optional target volume for the installation process. Example: "/Volumes/Mountain Lion"
+#
+#targetVolume=""
+targetVolume="/Volumes/Lion 2 Boot"
+#targetVolume="/Volumes/Mountain Lion"
+
+#
+# Target path.
+#
+targetPath="/Extra/NVRAM"
+
+#
+# Target path used for the installation process. 
+#
+targetInstallPath="${targetVolume}${targetPath}"
+
+#
+# Path to our configuation plist.
+#
+launchDaemonPlist="${targetVolume}/Library/LaunchDaemons/com.nvram.storage.plist"
+
+#
+# Path to our sandbox profile.
+#
+sandboxProfile="${targetInstallPath}/Sandbox/com.nvram.storage.sb"
+
+#
+# Interval of 300 seconds (defaults to 5 minutes) before it checks NVRAM again.
+#
+throttleInterval=300
+
+#=============================== LOCAL FUNCTIONS ================================
+
+function _fileExists()
+{
+  if [ -e "$1" ];
+      then
+          echo 1 # "File exists"
+      else
+          echo 0 # "File does not exist"
+  fi
+}
+
+#--------------------------------------------------------------------------------
+
+function _createLaunchDaemonPlist()
+{
+  echo '<?xml version="1.0" encoding="UTF-8"?>'						>  $launchDaemonPlist
+  echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> $launchDaemonPlist
+  echo '<plist version="1.0">'								>> $launchDaemonPlist
+  echo '<dict>'										>> $launchDaemonPlist
+  echo '        <key>Label</key>'							>> $launchDaemonPlist
+  echo '        <string>com.nvram.storage</string>'					>> $launchDaemonPlist
+  echo '        <key>OnDemand</key>'							>> $launchDaemonPlist
+  echo '        <false/>'								>> $launchDaemonPlist
+  echo '        <key>ProgramArguments</key>'						>> $launchDaemonPlist
+  echo '        <array>'								>> $launchDaemonPlist
+  echo '                <string>/usr/bin/sandbox-exec</string>'				>> $launchDaemonPlist
+  echo '                <string>-f</string>'						>> $launchDaemonPlist
+  echo '                <string>'$targetPath'/Sandbox/com.nvram.storage.sb</string>'	>> $launchDaemonPlist
+  echo '                <string>'$targetPath'/Daemon/nvramDaemon</string>'		>> $launchDaemonPlist
+  echo '        </array>'								>> $launchDaemonPlist
+  echo '        <key>ServiceIPC</key>'							>> $launchDaemonPlist
+  echo '        <false/>'								>> $launchDaemonPlist
+  echo '        <key>StandardErrorPath</key>'						>> $launchDaemonPlist
+  echo '        <string>/var/log/nvramStorage.log</string>'				>> $launchDaemonPlist
+  echo '        <key>StandardOutPath</key>'						>> $launchDaemonPlist
+  echo '        <string>/var/log/nvramStorage.log</string>'				>> $launchDaemonPlist
+  echo '        <key>KeepAlive</key>'							>> $launchDaemonPlist
+  echo '        <true/>'								>> $launchDaemonPlist
+  echo '        <key>RunAtLoad</key>'							>> $launchDaemonPlist
+  echo '        <true/>'								>> $launchDaemonPlist
+  echo '        <key>ThrottleInterval</key>'						>> $launchDaemonPlist
+  echo '        <integer>'$throttleInterval'</integer>'					>> $launchDaemonPlist
+  echo '</dict>'									>> $launchDaemonPlist
+  echo '</plist>'									>> $launchDaemonPlist
+}
+
+#--------------------------------------------------------------------------------
+
+function _createSandboxProfile()
+{
+  echo '; Copyright (c) 2012 by RevoGirl. All rights reserved.'		>  $sandboxProfile
+  echo ';'								>> $sandboxProfile
+  echo '; Sandbox profile (version 0.2) for: '$targetPath'/nvramDaemon'	>> $sandboxProfile
+  echo ';'								>> $sandboxProfile
+  echo ''								>> $sandboxProfile
+  echo '(version 1)'							>> $sandboxProfile
+  echo ''								>> $sandboxProfile
+  echo '(import "bsd.sb")'						>> $sandboxProfile
+  echo ''								>> $sandboxProfile
+  echo '(deny default)'							>> $sandboxProfile
+  echo ''								>> $sandboxProfile
+  echo '(allow process-fork)'						>> $sandboxProfile
+  echo ''								>> $sandboxProfile
+  echo '(allow file-read-data file-read-metadata'			>> $sandboxProfile
+  echo '       (literal "/")'						>> $sandboxProfile
+  echo '       (literal "/dev/tty")'					>> $sandboxProfile
+  echo '       (literal "/usr/sbin")'					>> $sandboxProfile
+  echo '       (literal "/usr/sbin/nvram")'				>> $sandboxProfile
+  echo '       (literal "/private/tmp/nvramStorage.plist")'		>> $sandboxProfile
+  echo '       (literal "'$targetPath'/Daemon/nvramDaemon")'		>> $sandboxProfile
+  echo '       (literal "'$targetPath'/nvramStorage.plist"))'		>> $sandboxProfile
+  echo ''								>> $sandboxProfile
+  echo '(allow file-write-create'					>> $sandboxProfile
+  echo '       (literal "/private/tmp/nvramStorage.plist"))'		>> $sandboxProfile
+  echo ''								>> $sandboxProfile
+  echo '(allow file-read-xattr'						>> $sandboxProfile
+  echo '       (literal "/private/tmp/nvramStorage.plist")'		>> $sandboxProfile
+  echo '       (literal "'$targetPath'/nvramStorage.plist"))'		>> $sandboxProfile
+  echo ''								>> $sandboxProfile
+  echo '(allow file-write-mode'						>> $sandboxProfile
+  echo '       (literal "/private/tmp/nvramStorage.plist")'		>> $sandboxProfile
+  echo '       (literal "'$targetPath'/nvramStorage.plist"))'		>> $sandboxProfile
+  echo ''								>> $sandboxProfile
+  echo '(allow file-write-data'						>> $sandboxProfile
+  echo '       (literal "/dev/tty")'					>> $sandboxProfile
+  echo '       (literal "/private/tmp/nvramStorage.plist")'		>> $sandboxProfile
+  echo '       (literal "'$targetPath'/nvramStorage.plist"))'		>> $sandboxProfile
+  echo ''								>> $sandboxProfile
+  echo '; Required for Mountain Lion.'					>> $sandboxProfile
+  echo '(allow file-ioctl'						>> $sandboxProfile
+  echo '       (literal "/private/tmp/nvramStorage.plist")'		>> $sandboxProfile
+  echo '       (literal "'$targetPath'/nvramStorage.plist"))'		>> $sandboxProfile
+  echo ''								>> $sandboxProfile
+  echo '(allow process-exec'						>> $sandboxProfile
+  echo '       (literal "/bin/sh")'					>> $sandboxProfile
+  echo '       (literal "/bin/cp")'					>> $sandboxProfile
+  echo '       (literal "/bin/date")'					>> $sandboxProfile
+  echo '       (literal "/sbin/md5")'					>> $sandboxProfile
+  echo '       (literal "/usr/sbin/nvram")'				>> $sandboxProfile
+  echo '       (literal "'$targetPath'/Daemon/nvramDaemon"))'		>> $sandboxProfile
+  echo ''								>> $sandboxProfile
+  echo '(allow iokit-set-properties)'					>> $sandboxProfile
+}
+
+#--------------------------------------------------------------------------------
+
+function main()
+{
+  #
+  # Do we have our target directory.
+  #
+  if [ $(_fileExists "${targetInstallPath}") -eq 0 ];
+      then
+      #
+      # No we don't. Create it.
+      #  
+      sudo mkdir -p "${targetInstallPath}"
+  fi
+
+  #
+  # Fix ownership and permissions.
+  #
+  sudo chown -R root:wheel "${targetInstallPath}"
+  sudo chmod -R 755 "${targetInstallPath}"
+
+  #
+  # Create the Sandbox sub-directory when it isn't there already.
+  #
+  if [ $(_fileExists "${targetInstallPath}/Sandbox") -eq 0 ]; then
+      sudo mkdir "${targetInstallPath}/Sandbox"
+  fi
+
+  #
+  # Fix ownership and permissions.
+  #
+  sudo chown -R root:wheel "${targetInstallPath}/Sandbox"
+  sudo chmod -R 755 "${targetInstallPath}/Sandbox"
+
+  _createSandboxProfile
+
+  #
+  # Fix permissions.
+  #
+  sudo chmod -R 644 "${sandboxProfile}"
+
+  #
+  # Do we have a previously installed daemon?
+  #
+  if [ -f "${targetInstallPath}/daemon" ]; 
+      then
+      #
+      # Yes. Remove it. Otherwise we can't create the sub-directory.
+      #
+      sudo rm "${targetInstallPath}/daemon"
+  fi
+
+  #
+  # Create the Daemon sub-directory when it isn't there already.
+  #
+  if [ $(_fileExists "${targetInstallPath}/Daemon") -eq 0 ]; then
+      sudo mkdir -p "${targetInstallPath}/Daemon"
+  fi
+
+  #
+  # Fix file ownership and permissions.
+  #
+  sudo chown root:wheel "${targetInstallPath}/Daemon"
+  sudo chmod 755 "${targetInstallPath}/Daemon"
+
+  #
+  # Copy the daemon.
+  #
+  local pwd=`pwd`
+
+  if [ $(_fileExists "${pwd}/nvramDaemon") -eq 1 ]; 
+      then
+          #
+          # Running from /Extra/NVRAM directory.
+          #
+          sudo cp "nvramDaemon" "${targetInstallPath}/Daemon"
+      else
+          #
+          # Running from /Extra/NVRAM/Script directory.
+          #
+          sudo cp "../Daemon/nvramDaemon" "${targetInstallPath}/Daemon"
+  fi
+
+  #
+  # Fix permissions.
+  #
+  sudo chmod -R 744 "${targetInstallPath}/Daemon/nvramDaemon"
+
+  #
+  # Dump NVRAM contents to a file.
+  #
+  sudo nvram -xp > "${targetInstallPath}/nvramStorage.plist"
+
+  #
+  # Fix ownership and permissions of the newly created plist.
+  #
+  sudo chown root:wheel "${targetInstallPath}/nvramStorage.plist"
+  sudo chmod 644 "${targetInstallPath}/nvramStorage.plist"
+
+  _createLaunchDaemonPlist
+
+  #
+  # Fix ownership and permissions of our Launch Daemon plist.
+  #
+  sudo chown root:wheel "${launchDaemonPlist}"
+  sudo chmod 644 "${launchDaemonPlist}"
+
+  #
+  # Are we installing onto another volume? 
+  #
+  if [ ${#targetVolume} -eq 0 ];
+      then
+          #
+          # Yes (we need at least '/Volumes/xx') to come here.
+          #
+          local status=`/usr/bin/sudo /bin/launchctl list | grep -e com.nvram.storage`
+
+          #
+          # Is this the first time that nvramSetup was fired up?
+          #
+          if [[ $status =~ com.nvram.storage$ ]]; then
+              #
+              # No. Stop the Launch Daemon.
+              #
+              sudo launchctl stop com.nvram.storage
+
+              #
+              # Now unload the Launch Daemon.
+              #
+              sudo launchctl unload "${targetVolume}/Library/LaunchDaemons/com.nvram.storage.plist"
+          fi
+
+          #
+          # Load the NVRAM Launch Daemon.
+          #
+          sudo launchctl load "${targetVolume}/Library/LaunchDaemons/com.nvram.storage.plist"
+      else
+          #
+          # Let's keep a copy of the installation script on the target volume.
+          #
+          if [ ! -d "${targetInstallPath}/Scripts" ]; then
+              sudo mkdir "${targetInstallPath}/Scripts"
+          fi
+
+          sudo cp nvramSetup "${targetInstallPath}/Scripts"
+  fi
+}
+
+#--------------------------------------------------------------------------------
+#
+# Only administrators (root) are allowed to run this script.
+#
+#--------------------------------------------------------------------------------
+
+function _isRoot()
+{
+  if [ $(id -u) != 0 ]; then
+      echo "This script must be run as root" 1>&2
+      exit 1
+  fi
+
+  echo 1
+}
+
+#==================================== START =====================================
+
+if [ $(_isRoot) ]; then
+  main
+fi
+
+#================================================================================
+
+exit 0

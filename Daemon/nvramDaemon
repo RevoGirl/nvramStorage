@@ -1,0 +1,89 @@
+#!/bin/sh
+
+#
+# Script (daemon) to keep track of changes to NVRAM storage.
+#
+# Version 0.4 - Copyright (c) 2012 by RevoGirl <DutchHockeyGoalie@yahoo.com>
+#
+
+#set -x # Used for tracing errors (can be put anywhere in the script).
+
+#================================= GLOBAL VARS ==================================
+
+product=nvramStorage
+
+storagePlist=/Extra/NVRAM/${product}.plist
+
+tmpStoragePlist=/tmp/${product}.plist
+
+#=============================== LOCAL FUNCTIONS ================================
+
+function _fileExists()
+{
+  if [ -f $1 ];
+      then
+          echo 0 # "Storage file exists"
+      else
+          echo 1 # "Storage file does not exist"
+  fi
+}
+
+#--------------------------------------------------------------------------------
+
+function _initialRun()
+{
+  echo $(_fileExists $tmpStoragePlist)
+}
+
+#--------------------------------------------------------------------------------
+
+function _shouldUpdate()
+{
+  /usr/sbin/nvram -xp > $tmpStoragePlist
+
+  local storageChecksum=`/sbin/md5 -q $storagePlist`
+  local tmpStorageChecksum=`/sbin/md5 -q $tmpStoragePlist`
+
+  if [ $storageChecksum == $tmpStorageChecksum ];
+      then
+          echo 0
+      else
+          echo 1
+  fi
+}
+
+#--------------------------------------------------------------------------------
+
+function _restoreNVRAMFromFile()
+{
+  /usr/sbin/nvram -xf $storagePlist
+  /bin/cp $storagePlist $tmpStoragePlist
+}
+
+#--------------------------------------------------------------------------------
+
+function _updateNVRAM()
+{
+  /bin/cp $tmpStoragePlist $storagePlist         
+  _restoreNVRAMFromFile
+}
+
+#==================================== START =====================================
+
+if [ $(_initialRun) -eq 1 ];
+    then
+        echo "Restored" `/bin/date "+%d-%m-%Y @ %H:%M:%S"`
+
+        _restoreNVRAMFromFile
+    else
+        echo "Checked" `/bin/date "+ @ %H:%M:%S"`
+
+        if [ $(_shouldUpdate) -eq 1 ]; then
+            echo "Update" `/bin/date "+ @ %H:%M:%S"`
+
+            _updateNVRAM
+        fi
+fi
+
+#--------------------------------------------------------------------------------
+
