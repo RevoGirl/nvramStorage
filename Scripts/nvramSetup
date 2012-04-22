@@ -2,7 +2,7 @@
 #
 # Script (nvramSetup) to setup a simple NVRAM storage under /Extra/NVRAM
 #
-# Version 0.5 - Copyright (c) 2012 by RevoGirl <DutchHockeyGoalie@yahoo.com>
+# Version 0.5 - Copyright (c) 2012 by RevoGirl <RevoGirl@rocketmail.com>
 #
 
 #set -x # Used for tracing errors (can be put anywhere in the script).
